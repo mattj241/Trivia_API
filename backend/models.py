@@ -1,10 +1,13 @@
 import os
 from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 import json
 
 database_name = "trivia"
-database_path = "postgres://{}/{}".format('localhost:5432', database_name)
+database_username = "postgres"
+database_password = "marshall"
+database_path = "postgresql://{}:{}@{}/{}".format(database_username, database_password, 'localhost:5432', database_name)
 
 db = SQLAlchemy()
 
@@ -18,6 +21,13 @@ def setup_db(app, database_path=database_path):
     db.app = app
     db.init_app(app)
     db.create_all()
+    Migrate(app, db)
+
+def session_revert():
+  db.session.rollback()
+
+def session_close():
+  db.session.close()
 
 '''
 Question
@@ -48,6 +58,8 @@ class Question(db.Model):
   def delete(self):
     db.session.delete(self)
     db.session.commit()
+  
+
 
   def format(self):
     return {
