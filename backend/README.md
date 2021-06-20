@@ -25,7 +25,8 @@ This will install all of the required packages we selected within the `requireme
 ### Database Setup
 With Postgres running, restore a database using the trivia.psql file provided. From the backend folder in terminal run:
 ```bash
-psql trivia < trivia.psql
+psql trivia < trivia.psql --> Max/Unix
+psql -U <username> -d trivia_test -a -f trivia.psql --> windows bash
 ```
 
 ### Running the server
@@ -236,7 +237,8 @@ Current_Question format:
     "question": {
         "question" : "yyy",
         "answer" : "zzz",
-        "id" : 20
+        "id" : 20,
+        "category": : 1
     }
 }
 Request Example: /quizzes
@@ -248,7 +250,7 @@ Request Example: /quizzes
                         "id": "1"
                     }
                 }
-Response Example:
+Response Example (Current_Question format):
 {
     "question": 
     {
@@ -256,7 +258,8 @@ Response Example:
         "category":1,
         "difficulty":3,
         "id":21,
-        "question":"Who discovered penicillin?"}
+        "question":"Who discovered penicillin?",
+        "category": : 1}
     }
 }
 
@@ -264,10 +267,10 @@ Response Example:
 
 
 ## Testing
-To run the tests, run
+To run the tests, cd to ./backend and run
 ```
 dropdb trivia_test
 createdb trivia_test
-psql trivia_test < trivia.psql
+psql -U <username> -d trivia_test -a -f trivia.psql
 python test_flaskr.py
 ```

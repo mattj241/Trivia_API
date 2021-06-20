@@ -55,6 +55,8 @@ def create_app(test_config=None):
       questions = Question.query.all()
     categories = get_categories(True)
     formatted_questions = [question.format() for question in questions]
+    if len(formatted_questions[start:end]) == 0:
+      abort(404)
     if not get_dict_type:
       return jsonify({
         "questions" : formatted_questions[start:end],
@@ -120,7 +122,8 @@ def create_app(test_config=None):
         "question" : {
           "question" : random_question_data.question,
           "id" : random_question_data.id,
-          "answer" : random_question_data.answer}
+          "answer" : random_question_data.answer,
+          "category" : random_question_data.category}
         }
     except IndexError:
        result =  {"question" : "",
@@ -128,32 +131,39 @@ def create_app(test_config=None):
     return jsonify(result)
 
   @app.errorhandler(404)
-  def not_found():
+  def not_found(error):
     return jsonify({
         "error": 404,
         "message": "Data was not found."
         }), 404
 
   @app.errorhandler(422)
-  def unprocessable():
+  def unprocessable(error):
     return jsonify({
         "error": 422,
         "message": "The request was well-formed but was unable to be followed due to semantic errors."
         }), 422
 
   @app.errorhandler(400)
-  def bad_syntax():
+  def bad_syntax(error):
     return jsonify({
         "error": 400,
         "message": "The server could not understand the request due to invalid syntax."
         }), 400
 
   @app.errorhandler(500)
-  def bad_syntax():
+  def server_error(error):
     return jsonify({
         "error": 500,
-        "message": "The server is not prepared to handle the last reqeust."
+        "message": "The server could not handle the last reqeust."
         }), 500
+
+  @app.errorhandler(405)
+  def bad_method(error):
+    return jsonify({
+        "error": 405,
+        "message": "The server is not prepared to handle the requested method."
+        }), 405
     
 
   return app
