@@ -128,18 +128,33 @@ def create_app(test_config=None):
     return jsonify(result)
 
   @app.errorhandler(404)
-  def not_found(error):
+  def not_found():
     return jsonify({
         "error": 404,
-        "message": "Data was not found"
+        "message": "Data was not found."
         }), 404
 
   @app.errorhandler(422)
-  def unprocessable(error):
+  def unprocessable():
     return jsonify({
         "error": 422,
-        "message": "Request was unprocessable"
+        "message": "The request was well-formed but was unable to be followed due to semantic errors."
         }), 422
+
+  @app.errorhandler(400)
+  def bad_syntax():
+    return jsonify({
+        "error": 400,
+        "message": "The server could not understand the request due to invalid syntax."
+        }), 400
+
+  @app.errorhandler(500)
+  def bad_syntax():
+    return jsonify({
+        "error": 500,
+        "message": "The server is not prepared to handle the last reqeust."
+        }), 500
+    
 
   return app
 
