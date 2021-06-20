@@ -268,6 +268,7 @@ Response Example (Current_Question format):
 
 ## Testing
 To run the tests, cd to ./backend and run
+
 ```
 dropdb trivia_test
 createdb trivia_test
