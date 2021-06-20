@@ -41,7 +41,7 @@ def create_app(test_config=None):
       })
 
   @app.route('/questions', methods=['GET'])
-  def get_questions(get_dict_type=False, search_term=None, category_id=None, excluded_questions=None):
+  def get_questions(get_dict_type=False, search_term=None):
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = start + QUESTIONS_PER_PAGE
@@ -59,14 +59,14 @@ def create_app(test_config=None):
       return jsonify({
         "questions" : formatted_questions[start:end],
         "total_questions" : len(formatted_questions),
-        "current_category" : categories[1], #TODO
+        "current_category" : categories[1], # Not really used for anything, front-end is expecting it
         "categories" : get_categories(True)
       })
     else:
       return {
         "questions" : formatted_questions[start:end],
         "total_questions" : len(formatted_questions),
-        "current_category" : categories[1], #TODO
+        "current_category" : categories[1], # Not really used for anything, front-end is expecting it
         "categories" : get_categories(True)
       }
 
