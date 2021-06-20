@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Flask, request, abort, jsonify, Response
 from flask.globals import session
 from flask_sqlalchemy import SQLAlchemy
@@ -27,12 +28,12 @@ def create_app(test_config=None):
     return response
 
   @app.route('/categories', methods=['GET'])
-  def get_categories(reuse=False):
+  def get_categories(get_dict_type=False):
     categories = Category.query.all()
     dict = {}
     for category in categories:
       dict.update({category.id : category.type})
-    if reuse:
+    if get_dict_type:
       return dict
     else:
       return jsonify({
@@ -40,15 +41,21 @@ def create_app(test_config=None):
       })
 
   @app.route('/questions', methods=['GET'])
-  def get_questions(reuse=False):
+  def get_questions(get_dict_type=False, search_term=None, category_id=None, excluded_questions=None):
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = start + QUESTIONS_PER_PAGE
 
-    questions = Question.query.all()
+    # IF Search is enabled
+    if search_term is not None:
+      questions = Question.query.filter(Question.question.ilike(r"%{}%".format(search_term)))
+
+    # IF just gathering all questions for the home screen
+    else:
+      questions = Question.query.all()
     categories = get_categories(True)
     formatted_questions = [question.format() for question in questions]
-    if not reuse:
+    if not get_dict_type:
       return jsonify({
         "questions" : formatted_questions[start:end],
         "total_questions" : len(formatted_questions),
@@ -75,63 +82,65 @@ def create_app(test_config=None):
       session_close()
     return jsonify(get_questions(True))
 
+  @app.route('/questions', methods=['POST'])
+  def add_question():
+    data = request.get_json()
+    if 'searchTerm' in data:
+      return get_questions(search_term=data['searchTerm'])
+    else:
+      try:
+        new_question = Question(data['question'], data['answer'], data['category'], data['difficulty'])
+        Question.insert(new_question)
+      except Exception:
+        session_revert()
+        abort(422)
+      finally:
+        session_close()
+      return jsonify({
+        "message" : "201 Question successfully created" 
+      })
+
+  @app.route('/quizzes', methods=['POST'])
+  def make_quiz():
+    data = request.get_json()
+    list_prev_questions = data['previous_questions']
+    category_id = (data['quiz_category'])['id']
+    if category_id is not None:
+      if (category_id != 0):
+        questions = Question.query.filter(Question.category==category_id, Question.id.not_in(list_prev_questions))
+      else:
+        questions = Question.query.filter(Question.id.not_in(list_prev_questions))
+    list_questions = []
+    for question in questions:
+      list_questions.append(question.id)
+    try:
+      random_question = random.choice(list_questions)
+      random_question_data = Question.query.filter(Question.id==random_question).first()
+      result =  {
+        "question" : {
+          "question" : random_question_data.question,
+          "id" : random_question_data.id,
+          "answer" : random_question_data.answer}
+        }
+    except IndexError:
+       result =  {"question" : "",
+                  "message" : "no more quiz questions left!"}
+    return jsonify(result)
+
   @app.errorhandler(404)
   def not_found(error):
     return jsonify({
         "error": 404,
-        "message": "Question not found"
+        "message": "Data was not found"
         }), 404
 
-  '''
-  @TODO: 
-  Create an endpoint to POST a new question, 
-  which will require the question and answer text, 
-  category, and difficulty score.
+  @app.errorhandler(422)
+  def unprocessable(error):
+    return jsonify({
+        "error": 422,
+        "message": "Request was unprocessable"
+        }), 422
 
-  TEST: When you submit a question on the "Add" tab, 
-  the form will clear and the question will appear at the end of the last page
-  of the questions list in the "List" tab.  
-  '''
-
-  '''
-  @TODO: 
-  Create a POST endpoint to get questions based on a search term. 
-  It should return any questions for whom the search term 
-  is a substring of the question. 
-
-  TEST: Search by any phrase. The questions list will update to include 
-  only question that include that string within their question. 
-  Try using the word "title" to start. 
-  '''
-
-  '''
-  @TODO: 
-  Create a GET endpoint to get questions based on category. 
-
-  TEST: In the "List" tab / main screen, clicking on one of the 
-  categories in the left column will cause only questions of that 
-  category to be shown. 
-  '''
-
-
-  '''
-  @TODO: 
-  Create a POST endpoint to get questions to play the quiz. 
-  This endpoint should take category and previous question parameters 
-  and return a random questions within the given category, 
-  if provided, and that is not one of the previous questions. 
-
-  TEST: In the "Play" tab, after a user selects "All" or a category,
-  one question at a time is displayed, the user is allowed to answer
-  and shown whether they were correct or not. 
-  '''
-
-  '''
-  @TODO: 
-  Create error handlers for all expected errors 
-  including 404 and 422. 
-  '''
-  
   return app
 
     
