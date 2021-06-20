@@ -3,11 +3,14 @@ from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import json
+from config import init_env_vars
 
+init_env_vars()
 database_name = "trivia"
-database_username = "postgres"
-database_password = "marshall"
-database_path = "postgresql://{}:{}@{}/{}".format(database_username, database_password, 'localhost:5432', database_name)
+database_username = os.getenv('DB_USER') 
+database_password = os.getenv('DB_PASSWORD')
+database_path = "postgresql://{}:{}@{}/{}"\
+  .format(database_username, database_password, 'localhost:5432', database_name)
 
 db = SQLAlchemy()
 

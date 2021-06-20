@@ -133,6 +133,20 @@ class TriviaTestCase(unittest.TestCase):
 
          self.assertEqual(len(data['questions']), 1)
 
+    def testCategoryFilter(self):
+        res = self.client().get('/categories/1/questions')
+        data = json.loads(res.data)
+
+        # number of all science questions = 3
+        self.assertEqual(len(data['questions']), 3)
+        self.assertEqual(res.status_code, 200)
+
+    def testCategoryFilter_fail(self):
+        res = self.client().get('/categories/1000/questions')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+
     def testSearch_invalid(self):
          res = self.client().post('/questions', json=self.search_question_invalid)
          data = json.loads(res.data)

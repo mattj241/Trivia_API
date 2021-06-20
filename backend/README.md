@@ -24,11 +24,20 @@ This will install all of the required packages we selected within the `requireme
 
 ### Database Setup
 With Postgres running, restore a database using the trivia.psql file provided. From the backend folder in terminal run:
-```bash
-psql trivia < trivia.psql --> Max/Unix
+```
+Max/Unix:
+psql trivia < trivia.psql
+
+Windows Bash:
 psql -U <username> -d trivia_test -a -f trivia.psql --> windows bash
 ```
 
+To connect the app to your database, edit the username and password in config.py
+
+```
+os.environ['DB_USER'] = 'my_username'
+os.environ['DB_PASSWORD'] = 'my_password'
+```
 ### Running the server
 
 From within the `./src` directory first ensure you are working using your created virtual environment.
@@ -84,6 +93,7 @@ This README is missing documentation of your endpoints. Below is an example for 
 
 Endpoints
 GET '/categories'
+GET '/categories/<int:id>/questions'
 GET '/questions(?page=1)'
 POST '/questions'
 DELETE '/questions/<int:id>'
@@ -133,9 +143,51 @@ Response Example:
     "total_questions" : 24
 }
 
+GET '/categories/<int:id>/questions'
+- This endpoint wraps the previous "questions" endpoint but only fetches questions that belong to a certain category
+- Request Args: One arg defined as a URL parameter to indicate the unique key of the category of questions we want to fetch
+- Returns: All questions from a certain category, as well as all categories so the user can still select other categories to fetch questions from
+Request Example: '/categories/1/questions
+Response Example: 
+{
+    "categories": {
+        "1": "Science",
+        "2": "Art",
+        "3": "Geography",
+        "4": "History",
+        "5": "Entertainment",
+        "6": "Sports"
+    },
+    "current_category": "Science",
+    "questions": [
+        {
+            "answer": "The Liver",
+            "category": 1,
+            "difficulty": 4,
+            "id": 20,
+            "question": "What is the heaviest organ in the human body?"
+        },
+        {
+            "answer": "Alexander Fleming",
+            "category": 1,
+            "difficulty": 3,
+            "id": 21,
+            "question": "Who discovered penicillin?"
+        },
+        {
+            "answer": "Blood",
+            "category": 1,
+            "difficulty": 4,
+            "id": 22,
+            "question": "Hematology is a branch of medicine involving the study of what?"
+        }
+    ],
+    "total_questions": 3
+}
+
 DELETE '/questions/<int:id>'
 - Attempts to remove the question from the trivia board specified by the question identifier within the URL
-- Request args: One arg defined as a URL parameter to indicate unique key of the question targetted to delete
+- Request args: One arg defined as a URL parameter to indicate the unique key of the question targetted to delete
 - Returns: Upon successful deletion, the entire new set of questions are sent back to the client. If the ID specified could not be found, a 404 will be sent back to the client:
 Request Example: '/questions/20'
 Response Example: 
@@ -265,11 +317,9 @@ Response Example (Current_Question format):
 
 
 
-
-## Testing
-To run the tests, cd to ./backend and run
-
 ```
+## Testing
+To run the tests, cd to ./backend and run the following:
 dropdb trivia_test
 createdb trivia_test
 psql -U <username> -d trivia_test -a -f trivia.psql
